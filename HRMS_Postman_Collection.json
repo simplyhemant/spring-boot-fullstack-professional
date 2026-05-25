@@ -1,0 +1,311 @@
+{
+	"info": {
+		"_postman_id": "4b5d2a93-8db2-4876-8802-1b1a134a413d",
+		"name": "HRMS Attendance & Overtime Engine",
+		"description": "Postman collection covering all API endpoints of the Construction HRMS system, including Student management, Clock-In/Clock-Out, Active Worker tracking, and Overtime Settlement workflows.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Student Management",
+			"item": [
+				{
+					"name": "Add Student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rahul Sharma\",\n  \"email\": \"rahul@gmail.com\",\n  \"gender\": \"MALE\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/students",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"students"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List All Students",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/students",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"students"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Student",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/students/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"students",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Attendance Workflows",
+			"item": [
+				{
+					"name": "Clock-In Worker",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workerId\": 1,\n  \"siteId\": 1\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/clock-in",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"clock-in"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Workers (Redis Cache)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/active",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"active"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clock-Out Worker",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workerId\": 1\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/clock-out",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"clock-out"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Attendance Logs (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/logs?workerId=1&from=2026-05-01T00:00:00&to=2026-05-31T23:59:59&page=0&size=20",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"logs"
+							],
+							"query": [
+								{
+									"key": "workerId",
+									"value": "1"
+								},
+								{
+									"key": "from",
+									"value": "2026-05-01T00:00:00"
+								},
+								{
+									"key": "to",
+									"value": "2026-05-31T23:59:59"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Overtime Workflows",
+			"item": [
+				{
+					"name": "Get Monthly Overtime Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/overtime/summary?workerId=1&month=2026-05",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"overtime",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "workerId",
+									"value": "1"
+								},
+								{
+									"key": "month",
+									"value": "2026-05"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Settle Monthly Overtime (Atomic)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/overtime/settle?workerId=1&month=2026-04",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"overtime",
+								"settle"
+							],
+							"query": [
+								{
+									"key": "workerId",
+									"value": "1"
+								},
+								{
+									"key": "month",
+									"value": "2026-04"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Mock External API",
+			"item": [
+				{
+					"name": "Mock Govt Wage Multiplier",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/government/min-wage-multiplier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"government",
+								"min-wage-multiplier"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"protocolProfileBehavior": {}
+}
