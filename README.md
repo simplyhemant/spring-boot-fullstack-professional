@@ -9,7 +9,7 @@ This repository contains the completed backend HRMS implementation for the Java 
 - **Database**: PostgreSQL (hosted on Supabase)
 - **Caching**: Redis (caching active workers, custom resilience error handler)
 - **Connection Pool**: HikariCP (optimized settings for transaction-pooler PgBouncer)
-- **API Testing**: Postman Collection committed directly in the project root (`HRMS_Postman_Collection.json`)
+- **API Testing**: [Postman Web Documentation](https://documenter.getpostman.com/view/39898850/2sBXwmPsWh) (raw JSON committed in the project root: `HRMS_Postman_Collection.json`)
 
 ---
 
