@@ -56,3 +56,6 @@ build/
 **/yarn-debug.log*
 **/yarn-error.log*
 
+# maven frontend plugin binaries
+src/frontend/node/
+
