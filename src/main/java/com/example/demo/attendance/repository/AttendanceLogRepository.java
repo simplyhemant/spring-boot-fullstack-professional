@@ -18,17 +18,18 @@ public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, Lo
     Optional<AttendanceLog> findFirstByWorkerIdAndClockOutIsNull(Long workerId);
 
     @Query(value = "SELECT a FROM AttendanceLog a JOIN FETCH a.worker JOIN FETCH a.site WHERE " +
-            "(:workerId IS NULL OR a.worker.id = :workerId) AND " +
-            "(:from IS NULL OR a.clockIn >= :from) AND " +
-            "(:to IS NULL OR a.clockIn <= :to)",
+            "(coalesce(:workerId, a.worker.id) = a.worker.id) AND " +
+            "(coalesce(:from, a.clockIn) <= a.clockIn) AND " +
+            "(coalesce(:to, a.clockIn) >= a.clockIn)",
             countQuery = "SELECT count(a) FROM AttendanceLog a WHERE " +
-            "(:workerId IS NULL OR a.worker.id = :workerId) AND " +
-            "(:from IS NULL OR a.clockIn >= :from) AND " +
-            "(:to IS NULL OR a.clockIn <= :to)")
+            "(coalesce(:workerId, a.worker.id) = a.worker.id) AND " +
+            "(coalesce(:from, a.clockIn) <= a.clockIn) AND " +
+            "(coalesce(:to, a.clockIn) >= a.clockIn)")
     Page<AttendanceLog> findLogs(@Param("workerId") Long workerId,
                                  @Param("from") LocalDateTime from,
                                  @Param("to") LocalDateTime to,
                                  Pageable pageable);
+
 
     List<AttendanceLog> findByClockOutIsNullAndClockInBefore(LocalDateTime threshold);
 
