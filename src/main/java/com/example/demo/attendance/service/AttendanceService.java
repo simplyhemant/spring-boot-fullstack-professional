@@ -295,4 +295,18 @@ public class AttendanceService {
             log.error("Failed to invalidate active worker cache for worker {}: {}", workerId, e.getMessage());
         }
     }
+
+    @Transactional
+    public Worker createWorker(Worker worker) {
+        if (workerRepository.existsByPhone(worker.getPhone())) {
+            throw new IllegalArgumentException("Worker with phone " + worker.getPhone() + " already exists.");
+        }
+        return workerRepository.save(worker);
+    }
+
+    @Transactional
+    public Site createSite(Site site) {
+        return siteRepository.save(site);
+    }
 }
+

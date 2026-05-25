@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "4b5d2a93-8db2-4876-8802-1b1a134a413d",
 		"name": "HRMS Attendance & Overtime Engine",
-		"description": "Postman collection covering all API endpoints of the Construction HRMS system, including Student management, Clock-In/Clock-Out, Active Worker tracking, and Overtime Settlement workflows.",
+		"description": "Postman collection covering all API endpoints of the Construction HRMS system, including Student management, Worker/Site seeding, Clock-In/Clock-Out, Active Worker tracking, and Overtime Settlement workflows.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -85,7 +85,72 @@
 			]
 		},
 		{
-			"name": "2. Attendance Workflows",
+			"name": "2. Database Seeding (Setup)",
+			"item": [
+				{
+					"name": "Create Worker (Seed)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"phone\": \"9876543210\",\n  \"designation\": \"MASON\",\n  \"dailyWageRate\": 800.0,\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/workers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"workers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Site (Seed)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"siteName\": \"Metro Tunnel Site A\",\n  \"location\": \"Sector 62, Noida\",\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/attendance/sites",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"attendance",
+								"sites"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Attendance Workflows",
 			"item": [
 				{
 					"name": "Clock-In Worker",
@@ -214,7 +279,7 @@
 			]
 		},
 		{
-			"name": "3. Overtime Workflows",
+			"name": "4. Overtime Workflows",
 			"item": [
 				{
 					"name": "Get Monthly Overtime Summary",
@@ -281,7 +346,7 @@
 			]
 		},
 		{
-			"name": "4. Mock External API",
+			"name": "5. Mock External API",
 			"item": [
 				{
 					"name": "Mock Govt Wage Multiplier",

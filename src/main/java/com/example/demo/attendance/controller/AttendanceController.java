@@ -8,8 +8,11 @@ import com.example.demo.attendance.dto.PaginatedResponse;
 import com.example.demo.attendance.dto.SiteDto;
 import com.example.demo.attendance.dto.WorkerDto;
 import com.example.demo.attendance.entity.AttendanceLog;
+import com.example.demo.attendance.entity.Worker;
+import com.example.demo.attendance.entity.Site;
 import com.example.demo.attendance.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -75,7 +78,34 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/workers")
+    public ResponseEntity<WorkerDto> createWorker(@Valid @RequestBody Worker worker) {
+        Worker saved = attendanceService.createWorker(worker);
+        WorkerDto dto = new WorkerDto(
+                saved.getId(),
+                saved.getName(),
+                saved.getPhone(),
+                saved.getDesignation().name(),
+                saved.getDailyWageRate(),
+                saved.isActive()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/sites")
+    public ResponseEntity<SiteDto> createSite(@Valid @RequestBody Site site) {
+        Site saved = attendanceService.createSite(site);
+        SiteDto dto = new SiteDto(
+                saved.getId(),
+                saved.getSiteName(),
+                saved.getLocation(),
+                saved.isActive()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
     private AttendanceLogDto convertToDto(AttendanceLog logEntry) {
+
         WorkerDto workerDto = new WorkerDto(
                 logEntry.getWorker().getId(),
                 logEntry.getWorker().getName(),
