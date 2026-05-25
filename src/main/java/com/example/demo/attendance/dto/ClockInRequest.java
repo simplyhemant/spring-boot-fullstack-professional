@@ -14,4 +14,7 @@ public class ClockInRequest {
 
     @NotNull(message = "siteId is required")
     private Long siteId;
+
+    private String clockInTime;
+
 }

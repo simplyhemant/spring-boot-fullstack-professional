@@ -11,4 +11,7 @@ import javax.validation.constraints.NotNull;
 public class ClockOutRequest {
     @NotNull(message = "workerId is required")
     private Long workerId;
+
+    private String clockOutTime;
+
 }

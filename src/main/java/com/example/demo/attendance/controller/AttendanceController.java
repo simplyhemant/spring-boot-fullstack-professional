@@ -39,15 +39,24 @@ public class AttendanceController {
 
     @PostMapping("/clock-in")
     public ResponseEntity<AttendanceLogDto> clockIn(@Valid @RequestBody ClockInRequest request) {
-        AttendanceLog logEntry = attendanceService.clockIn(request.getWorkerId(), request.getSiteId());
+        LocalDateTime customTime = null;
+        if (request.getClockInTime() != null && !request.getClockInTime().isEmpty()) {
+            customTime = LocalDateTime.parse(request.getClockInTime());
+        }
+        AttendanceLog logEntry = attendanceService.clockIn(request.getWorkerId(), request.getSiteId(), customTime);
         return ResponseEntity.ok(convertToDto(logEntry));
     }
 
     @PostMapping("/clock-out")
     public ResponseEntity<AttendanceLogDto> clockOut(@Valid @RequestBody ClockOutRequest request) {
-        AttendanceLog logEntry = attendanceService.clockOut(request.getWorkerId());
+        LocalDateTime customTime = null;
+        if (request.getClockOutTime() != null && !request.getClockOutTime().isEmpty()) {
+            customTime = LocalDateTime.parse(request.getClockOutTime());
+        }
+        AttendanceLog logEntry = attendanceService.clockOut(request.getWorkerId(), customTime);
         return ResponseEntity.ok(convertToDto(logEntry));
     }
+
 
     @GetMapping("/active")
     public ResponseEntity<List<ActiveWorkerDto>> getActiveWorkers() {

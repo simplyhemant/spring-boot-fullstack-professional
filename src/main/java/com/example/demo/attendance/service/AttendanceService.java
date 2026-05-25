@@ -46,6 +46,11 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceLog clockIn(Long workerId, Long siteId) {
+        return clockIn(workerId, siteId, LocalDateTime.now());
+    }
+
+    @Transactional
+    public AttendanceLog clockIn(Long workerId, Long siteId, LocalDateTime clockInTime) {
         Worker worker = workerRepository.findById(workerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with ID: " + workerId));
         if (!worker.isActive()) {
@@ -63,29 +68,35 @@ public class AttendanceService {
             throw new DuplicateClockInException("Worker is already clocked in at Site: " + log.getSite().getSiteName());
         });
 
-        LocalDateTime now = LocalDateTime.now();
-        AttendanceLog attendanceLog = new AttendanceLog(worker, site, now);
+        LocalDateTime timeToUse = clockInTime != null ? clockInTime : LocalDateTime.now();
+        AttendanceLog attendanceLog = new AttendanceLog(worker, site, timeToUse);
         AttendanceLog savedLog = attendanceLogRepository.save(attendanceLog);
 
         // Cache in Redis
-        saveActiveWorkerToRedis(worker, site, now);
+        saveActiveWorkerToRedis(worker, site, timeToUse);
 
         return savedLog;
     }
 
+
     @Transactional
     public AttendanceLog clockOut(Long workerId) {
+        return clockOut(workerId, LocalDateTime.now());
+    }
+
+    @Transactional
+    public AttendanceLog clockOut(Long workerId, LocalDateTime clockOutTime) {
         Worker worker = workerRepository.findById(workerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with ID: " + workerId));
 
         AttendanceLog attendanceLog = attendanceLogRepository.findFirstByWorkerIdAndClockOutIsNull(workerId)
                 .orElseThrow(() -> new NotClockedInException("Worker is not currently clocked in."));
 
-        LocalDateTime now = LocalDateTime.now();
-        attendanceLog.setClockOut(now);
+        LocalDateTime timeToUse = clockOutTime != null ? clockOutTime : LocalDateTime.now();
+        attendanceLog.setClockOut(timeToUse);
 
         // Calculate hours
-        double totalHours = Duration.between(attendanceLog.getClockIn(), now).toMillis() / (1000.0 * 60.0 * 60.0);
+        double totalHours = Duration.between(attendanceLog.getClockIn(), timeToUse).toMillis() / (1000.0 * 60.0 * 60.0);
         totalHours = Math.round(totalHours * 100.0) / 100.0;
         attendanceLog.setTotalHours(totalHours);
 
@@ -101,7 +112,7 @@ public class AttendanceService {
         }
 
         // Apply monthly overtime cap of 60 hours
-        String month = now.toLocalDate().toString().substring(0, 7); // Format YYYY-MM
+        String month = timeToUse.toLocalDate().toString().substring(0, 7); // Format YYYY-MM
         double accumulatedOt = overtimeEntryRepository.getAccumulatedOvertimeHours(workerId, month);
         
         double allowedOt = Math.max(0.0, 60.0 - accumulatedOt);
@@ -128,7 +139,7 @@ public class AttendanceService {
             OvertimeEntry overtimeEntry = new OvertimeEntry();
             overtimeEntry.setWorker(worker);
             overtimeEntry.setAttendance(savedLog);
-            overtimeEntry.setDate(now.toLocalDate());
+            overtimeEntry.setDate(timeToUse.toLocalDate());
             overtimeEntry.setOvertimeHours(finalOt);
             overtimeEntry.setOvertimeRateApplied(hourlyRate.multiply(BigDecimal.valueOf(1.5))); // Base overtime rate is 1.5x
             overtimeEntry.setAmount(otAmount);
@@ -143,6 +154,7 @@ public class AttendanceService {
 
         return savedLog;
     }
+
 
     public List<ActiveWorkerDto> getActiveWorkers() {
         try {
