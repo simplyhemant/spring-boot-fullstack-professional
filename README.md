@@ -1,123 +1,175 @@
-# HRMS Attendance & Overtime Settlement Engine
+# Construction HRMS: Attendance & Overtime Settlement Engine
 
-This repository contains the completed hiring assignment for the Java Backend Developer role. It implements a robust, production-ready Attendance and Overtime Settlement Engine for managing a site-based blue-collar workforce, and resolves 5 critical production backend tickets.
-
----
-
-## Fork Context & Setup
-- **Forked Repo:** `spring-boot-fullstack-professional` (Amigoscode Spring Boot & React Course template).
-- **Why:** It provides a clean, pre-configured structure with Spring Boot, Spring Data JPA, and PostgreSQL, allowing focus on the core backend implementation, database constraints, caching strategies, and connection pool tuning.
-
-### Prerequisites
-- **Java:** JDK 17 or higher
-- **Database:** PostgreSQL (Supabase instance)
-- **Cache:** Redis (Local or Cloud instance)
+This repository contains the completed backend HRMS implementation for the Java Backend Developer role. The system is designed to manage a daily wage, shift-based, overtime-heavy blue-collar workforce (such as site supervisors, crews, and payroll operators) and is fully optimized for scale, data integrity, and resilience.
 
 ---
 
-## Setup & Running the Application
+## 🛠️ Tech Stack & Key Features
+- **Framework**: Spring Boot (v2.4.3), Java 17+ (tested on Java 21)
+- **Database**: PostgreSQL (hosted on Supabase)
+- **Caching**: Redis (caching active workers, custom resilience error handler)
+- **Connection Pool**: HikariCP (optimized settings for transaction-pooler PgBouncer)
+- **API Testing**: Postman Collection committed directly in the project root (`HRMS_Postman_Collection.json`)
 
-### 1. Database Configuration (Supabase & PgBouncer)
-- Create a project on [Supabase](https://supabase.com/).
-- Navigate to **Project Settings > Database** to retrieve the connection details.
-- **For Staging/Production:** Use the **Connection Pooler** URI on port `6543` (session/transaction mode) to connect via PgBouncer.
-- Configure properties in `src/main/resources/application.properties` (or `application-staging.properties` for PgBouncer):
-  ```properties
-  spring.datasource.url=jdbc:postgresql://<db-host>:6543/postgres?prepareThreshold=0
-  spring.datasource.username=postgres
-  spring.datasource.password=<your-supabase-password>
-  ```
+---
+
+## 🚀 Setup & Installation
+
+### 1. Database Configuration
+By default, the application is configured to connect to PostgreSQL.
+For local PostgreSQL development, update the database details in `src/main/resources/application.properties`.
+For production-like connection pooling (using Supabase with PgBouncer at port `6543`), configure the settings in `src/main/resources/application-staging.properties`:
+```properties
+spring.datasource.url=jdbc:postgresql://<db-host>:6543/postgres?prepareThreshold=0
+spring.datasource.username=postgres
+spring.datasource.password=<your-password>
+```
+> [!IMPORTANT]
+> The parameter `prepareThreshold=0` is critical when connecting to PgBouncer in transaction mode to prevent prepared statement errors.
 
 ### 2. Redis Configuration
-- Ensure Redis is running locally on port `6379`.
-- If using a cloud Redis instance, specify its URI and credentials in `application.properties`:
-  ```properties
-  spring.redis.host=localhost
-  spring.redis.port=6379
-  ```
-
-### 3. Running the Server Locally
-To run the Spring Boot application using Maven:
-```bash
-./mvnw spring-boot:run
+Make sure Redis is running on port `6379`.
+```properties
+spring.redis.host=localhost
+spring.redis.port=6379
 ```
 
-To execute the test suite (backend only, skipping the frontend rebuild):
+### 3. Build and Run
+To run the Spring Boot server locally:
 ```bash
-mvn test -Dskip.npm
+mvn spring-boot:run -P"!build-frontend"
 ```
 
----
-
-## Part 1: API Endpoints & Curl Examples
-
-### 1. Clock-in
-Logs a worker's arrival at a site. Enforces active profile checks and prevents double clock-ins.
+To run the unit and integration tests:
 ```bash
-curl -X POST http://localhost:8080/api/attendance/clock-in \
-  -H "Content-Type: application/json" \
-  -d '{"workerId": 1, "siteId": 1}'
-```
-
-### 2. Clock-out
-Logs departure, calculates total/overtime hours, applies shift cap calculations, and updates the active workers cache.
-```bash
-curl -X POST http://localhost:8080/api/attendance/clock-out \
-  -H "Content-Type: application/json" \
-  -d '{"workerId": 1}'
-```
-
-### 3. List Active Workers
-Fetches all currently clocked-in workers. This is served exclusively from Redis for high performance.
-```bash
-curl -X GET http://localhost:8080/api/attendance/active
-```
-
-### 4. Paginated Attendance Logs
-Gets attendance logs for a worker within a date range using optimal join fetches.
-```bash
-curl -X GET "http://localhost:8080/api/attendance/log?workerId=1&from=2026-05-01&to=2026-05-31&page=0&size=10"
-```
-
-### 5. Overtime Summary
-Monthly overtime summary containing payout details and settlement status.
-```bash
-curl -X GET "http://localhost:8080/api/overtime/summary/1?month=2026-05"
-```
-
-### 6. Overtime Settlement
-Marks all pending overtime entries for a worker + month as settled. This is an all-or-nothing operation.
-```bash
-curl -X POST "http://localhost:8080/api/overtime/settle/1?month=2026-04"
+mvn test -P"!build-frontend"
 ```
 
 ---
 
-## Part 2: Resolved Production Tickets
+## 📦 Database Seeding & Setup APIs
+To make testing convenient, two endpoints are exposed to seed workers and sites into the database before clocking in.
 
-### 1. LF-201: Configurable CORS
-- **Resolution:** Added a dedicated `CorsConfig` filter registered before Spring Security processes preflight queries. Allowed origins are dynamically loaded from `app.cors.allowed-origins`.
+### 1. Create a Worker (Seed)
+* **Endpoint**: `POST /api/attendance/workers`
+* **Request Body**:
+```json
+{
+  "name": "John Doe",
+  "phone": "9876543210",
+  "designation": "MASON",
+  "dailyWageRate": 800.0,
+  "active": true
+}
+```
 
-### 2. LF-202: Resilient Redis Caching
-- **Resolution:** Overrode the default `CacheErrorHandler` so that cache connection drops are caught, warnings are logged, and queries degrade gracefully to direct database fetches.
-
-### 3. LF-203: N+1 Query Optimization
-- **Resolution:** Configured lazy relationships and used JPA `JOIN FETCH` queries in `AttendanceLogRepository` to retrieve Worker and Site relations in a single database roundtrip. Added Spring Data `Pageable` support for optimized memory footprint.
-
-### 4. LF-204: Transactional Atomicity & SMS
-- **Resolution:** Extracted database mutation operations into `OvertimeSettlementTransactionHelper` annotated with `@Transactional`. Post-commit notifications are executed asynchronously using Spring's `@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)` to prevent SMS dispatch on transaction rollbacks.
-
-### 5. LF-205: Connection Pool Tuning
-- **Resolution:** Created `application-staging.properties` with tuned HikariCP properties (`max-lifetime=300000`, `keepalive-time=30000`) for Supabase's transaction pooler. Structured `OvertimeService` to make slow external REST calls *before* acquiring a database transaction.
+### 2. Create a Site (Seed)
+* **Endpoint**: `POST /api/attendance/sites`
+* **Request Body**:
+```json
+{
+  "siteName": "Metro Tunnel Site A",
+  "location": "Sector 62, Noida",
+  "active": true
+}
+```
 
 ---
 
-## AI Tools & Design Decisions
+## ⏱️ Custom-Time Testing & Overtime Simulation
+Since real-time clock-in/out calls only span a few seconds (producing `0.0` overtime), the clock-in and clock-out endpoints support optional **custom timestamps** (`ISO DATE_TIME` format) to easily simulate historical shifts.
 
-### AI Tools Utilized
-- **Antigravity (Google DeepMind):** Used for repository discovery, test generation, schema optimization, dependency auditing (resolving Lombok and Lettuce connection pool conflicts), and mapping transaction boundaries.
+### Step 1: Clock-In at a past time (e.g. 11.5 hours ago in May)
+* **Endpoint**: `POST /api/attendance/clock-in`
+* **Request Body**:
+```json
+{
+  "workerId": 1,
+  "siteId": 1,
+  "clockInTime": "2026-05-15T08:00:00"
+}
+```
 
-### Design Decisions & Trade-offs
-- **Redis Caching Strategy:** Chose to store the active workers set in a Redis Hash. This keeps checking current workers extremely fast. Implemented TTL safety cappings of 16 hours to automatically flag open-ended shifts if a supervisor misses a clock-out.
-- **Service/Transaction Partitioning:** The decision to pull the external government wage REST request out of the transaction helper prevents HikariCP connections from hanging idle, vastly increasing staging server concurrent request throughput.
-- **Database level constraints:** Added composite database indices on `worker_id` and `clock_in` to guarantee rapid lookups and enforce uniqueness constraints.
+### Step 2: Clock-Out with a custom time
+* **Endpoint**: `POST /api/attendance/clock-out`
+* **Request Body**:
+```json
+{
+  "workerId": 1,
+  "clockOutTime": "2026-05-15T19:30:00"
+}
+```
+* **Result**: Generates a shift of `11.5` hours, producing `3.5` hours of overtime (`11.5` total hours - `8.0` standard hours).
+
+### Step 3: Fetch Monthly Overtime Summary
+* **Endpoint**: `GET /api/overtime/summary?workerId=1&month=2026-05`
+* **Response**:
+```json
+{
+  "workerId": 1,
+  "workerName": "John Doe",
+  "month": "2026-05",
+  "totalOvertimeHours": 3.5,
+  "totalPayout": 600.0,
+  "settlementStatus": "PENDING",
+  "details": [
+    {
+      "date": "2026-05-15",
+      "overtimeHours": 3.5,
+      "rateApplied": 150.0,
+      "amount": 600.0,
+      "settlementStatus": "PENDING"
+    }
+  ]
+}
+```
+
+### Step 4: Settle Monthly Overtime
+* **Endpoint**: `POST /api/overtime/settle?workerId=1&month=2026-05`
+* **Result**: Settles all pending entries for that month atomically and triggers an asynchronous SMS confirmation.
+> [!NOTE]
+> Settlement is restricted to past completed months (you cannot settle the current or a future month).
+
+---
+
+## 🛠️ Core API Reference
+
+| Endpoint | Method | Params / Body | Description |
+|---|---|---|---|
+| `/api/attendance/clock-in` | `POST` | `{"workerId": 1, "siteId": 1, "clockInTime": "..."}` | Clock-in a worker. Saves active worker state to Redis. |
+| `/api/attendance/clock-out` | `POST` | `{"workerId": 1, "clockOutTime": "..."}` | Clock-out a worker. Computes hours, overtime, and removes from Redis. |
+| `/api/attendance/active` | `GET` | None | Fetches all currently clocked-in workers directly from Redis. |
+| `/api/attendance/logs` | `GET` | `workerId`, `from`, `to`, `page`, `size` | Paginated retrieval of attendance records with JOIN FETCH optimizations. |
+| `/api/overtime/summary` | `GET` | `workerId`, `month` (`YYYY-MM`) | Fetches total monthly overtime, rates, payouts, and settlement status. |
+| `/api/overtime/settle` | `POST` | `workerId`, `month` (`YYYY-MM`) | Settles pending overtime hours atomically. |
+
+---
+
+## 🧾 Solved Production Tickets
+
+### 🔍 LF-201: Configurable CORS Filter
+* **Problem**: Staging frontends on different domains failed due to missing/misconfigured CORS headers.
+* **Solution**: Registered a custom `CorsFilter` bean mapping allowed origins dynamically loaded from `app.cors.allowed-origins`.
+
+### 🛡️ LF-202: Resilient Redis Caching
+* **Problem**: Redis server downtime crashed the entire clock-in/out request lifecycle.
+* **Solution**: Overrode `CacheErrorHandler` so that cache connection exceptions are caught, logged, and queries degrade gracefully to standard PostgreSQL database lookups instead of crashing.
+
+### ⚡ LF-203: N+1 Query Optimization
+* **Problem**: Clock-in and log-retrieval APIs were making hundreds of database calls due to lazy loading.
+* **Solution**: Utilized JPQL `JOIN FETCH` queries in `AttendanceLogRepository` to retrieve worker and site entities in a single database roundtrip. Rewrote dynamic queries with `COALESCE` to solve PostgreSQL parameter type-inference errors.
+
+### 🔒 LF-204: Transactional Atomicity & Post-Commit Actions
+* **Problem**: Monthly settlements are financial operations and must be all-or-nothing. However, failures in SMS dispatch caused entire settlements to rollback, or rolled-back settlements still fired SMS notifications.
+* **Solution**: Separated transactional mutations into a dedicated helper. Leveraged `@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)` with an asynchronous executor (`@Async`) to ensure SMS alerts only dispatch *after* a successful transaction commit.
+
+### 🎛️ LF-205: Connection Pool Tuning
+* **Problem**: Supabase's transaction pooler (PgBouncer) closed idle connections frequently, causing application-side timeouts. Slow external REST calls held active database connections open, starving the connection pool.
+* **Solution**: Added tuned HikariCP settings (`max-lifetime=300000`, `keepalive-time=30000`) matching PgBouncer's profile. Restructured the service to make slow external wage multiplier REST calls *before* acquiring a database transaction.
+
+---
+
+## 🏛️ Architectural Considerations: Business & Humans
+* **The Site Supervisor**: Standing on a hot construction site, the supervisor needs to clock in 40+ workers in minutes. The active worker list is cached in a Redis set to guarantee sub-millisecond response times.
+* **The Payroll Operator**: At month-end, payroll needs exact numbers. Real people's livelihoods depend on these wages. We enforce database-level index constraints and transactional atomicity to prevent duplicate, partial, or corrupt settlement figures.
+* **The Worker**: Trust is built on transparency. The worker receives an automated, post-commit SMS specifying their settled hours and wage. If a supervisor forgets to clock out a worker, the system automatically flags any shift exceeding 16 hours for review.
