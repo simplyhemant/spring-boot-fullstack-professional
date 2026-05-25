@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HRMS Enterprise Architecture Blueprint Dashboard</title>
+  <!-- Google Fonts: Outfit (headings/UI) and JetBrains Mono (labels/code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS CSS Reset & Variables */
+    :root {
+      --bg-darkest: #09090b;
+      --bg-card: rgba(18, 18, 20, 0.85);
+      --border-color: #27272a;
+      --border-accent: rgba(6, 182, 212, 0.3);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      
+      --color-cyan: #06b6d4;
+      --color-cyan-glow: rgba(6, 182, 212, 0.15);
+      --color-emerald: #10b981;
+      --color-emerald-glow: rgba(16, 185, 129, 0.15);
+      --color-orange: #f97316;
+      --color-orange-glow: rgba(249, 115, 22, 0.15);
+      --color-amber: #eab308;
+      --color-amber-glow: rgba(234, 179, 8, 0.15);
+      --color-purple: #8b5cf6;
+      --color-purple-glow: rgba(139, 92, 246, 0.15);
+      --color-red: #ef4444;
+      --color-red-glow: rgba(239, 68, 68, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-darkest);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.5;
+      padding: 2.5rem;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 5% 10%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 95% 90%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%);
+    }
+
+    .container {
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    /* Dashboard Header */
+    header {
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .title-area h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      background: linear-gradient(to right, #ffffff 30%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .title-area p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      font-weight: 300;
+      max-width: 800px;
+    }
+
+    .status-panel {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .badge-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      background: var(--color-emerald-glow);
+      color: var(--color-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+    }
+
+    .badge-status::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-emerald);
+      box-shadow: 0 0 10px var(--color-emerald);
+      animation: pulse 1.8s infinite;
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.5rem;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Panels */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.45);
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      border-color: rgba(6, 182, 212, 0.35);
+      box-shadow: 0 12px 50px 0 rgba(6, 182, 212, 0.08);
+    }
+
+    .card-wide {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 1200px) {
+      .card-wide {
+        grid-column: span 1;
+      }
+    }
+
+    .card-header {
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      padding-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-header h2 .card-zone {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--color-cyan);
+      font-size: 0.85rem;
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      background: var(--color-cyan-glow);
+      font-weight: 700;
+    }
+
+    .card-header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-weight: 300;
+    }
+
+    .card-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Diagram Styling */
+    svg {
+      width: 100%;
+      height: 100%;
+      min-height: 380px;
+      overflow: visible;
+    }
+
+    /* Animation effects */
+    .flow-line {
+      stroke-dasharray: 8 4;
+      animation: dash 25s linear infinite;
+    }
+
+    .flow-line-fast {
+      stroke-dasharray: 6 3;
+      animation: dash 12s linear infinite;
+    }
+
+    .flow-line-reverse {
+      stroke-dasharray: 8 4;
+      animation: dash-reverse 25s linear infinite;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -1000;
+      }
+    }
+
+    @keyframes dash-reverse {
+      to {
+        stroke-dashoffset: 1000;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 0.7;
+      }
+    }
+
+    /* Node Hover Interactions */
+    .node {
+      cursor: pointer;
+      transition: filter 0.3s ease, stroke-width 0.3s ease;
+    }
+
+    .node:hover {
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.15));
+    }
+
+    .node-cyan:hover {
+      filter: drop-shadow(0 0 12px var(--color-cyan));
+    }
+
+    .node-orange:hover {
+      filter: drop-shadow(0 0 12px var(--color-orange));
+    }
+
+    .node-emerald:hover {
+      filter: drop-shadow(0 0 12px var(--color-emerald));
+    }
+
+    .node-red:hover {
+      filter: drop-shadow(0 0 12px var(--color-red));
+    }
+
+    /* Architectural Matrix Styles */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    .matrix-table th {
+      border-bottom: 2px solid var(--border-color);
+      padding: 1rem;
+      color: #ffffff;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+    }
+
+    .matrix-table td {
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem 1rem;
+      vertical-align: middle;
+    }
+
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .matrix-table tr:hover {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .actor-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .actor-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .icon-cyan {
+      background: var(--color-cyan-glow);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--color-cyan);
+    }
+
+    .icon-orange {
+      background: var(--color-orange-glow);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      color: var(--color-orange);
+    }
+
+    .icon-emerald {
+      background: var(--color-emerald-glow);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--color-emerald);
+    }
+
+    .icon-purple {
+      background: var(--color-purple-glow);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: var(--color-purple);
+    }
+
+    .actor-name {
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 1.05rem;
+    }
+
+    .actor-subtext {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .system-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .system-badge.active-badge {
+      background: var(--color-cyan-glow);
+      border-color: rgba(6, 182, 212, 0.25);
+      color: var(--color-cyan);
+    }
+
+    .system-badge.transaction-badge {
+      background: var(--color-orange-glow);
+      border-color: rgba(249, 115, 22, 0.25);
+      color: var(--color-orange);
+    }
+
+    .system-badge.event-badge {
+      background: var(--color-emerald-glow);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--color-emerald);
+    }
+
+    .system-badge.engine-badge {
+      background: var(--color-purple-glow);
+      border-color: rgba(139, 92, 246, 0.25);
+      color: var(--color-purple);
+    }
+
+    .business-constraint-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .constraint-highlight {
+      color: #ffffff;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="title-area">
+        <h1>HRMS Enterprise Architecture Blueprint</h1>
+        <p>A comprehensive system architecture mapping Spring Boot backend constructs, HikariCP/PgBouncer pooling configurations, and event-driven database behaviors to site-management business constraints.</p>
+      </div>
+      <div class="status-panel">
+        <div class="badge-status">SYSTEM STABLE & VERIFIED (PORT 6543 POOLER)</div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- ZONE 1: REQUEST PIPELINE WITH CORS & CACHE FALLBACK -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2><span class="card-zone">Zone 1</span> Multi-Layer Technical Request Pipeline with CORS & Cache Fallback</h2>
+            <p>React Frontend HTTP/OPTIONS preflight verification, REST controller deserialization, Redis active caches, and O(1) JPA JOIN FETCH database fallback</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#a1a1aa" />
+              </marker>
+              <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-cyan)" />
+              </marker>
+              <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-orange)" />
+              </marker>
+              <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-red)" />
+              </marker>
+            </defs>
+
+            <!-- React Frontend Box -->
+            <g class="node node-cyan" transform="translate(10, 110)">
+              <rect x="0" y="0" width="100" height="60" rx="8" fill="var(--bg-darkest)" stroke="var(--color-cyan)" stroke-width="2" />
+              <text x="50" y="24" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">React Frontend</text>
+              <text x="50" y="40" font-family="'JetBrains Mono', monospace" font-size="8.5" fill="var(--color-cyan)" text-anchor="middle">localhost:3000</text>
+              <text x="50" y="50" font-family="'Outfit', sans-serif" font-size="7" fill="var(--text-muted)" text-anchor="middle">OPTIONS & POST</text>
+            </g>
+
+            <!-- Pipe: Frontend to CorsFilter -->
+            <path d="M 110 140 H 155" fill="none" stroke="var(--color-cyan)" stroke-width="1.8" class="flow-line" marker-end="url(#arrow-cyan)" />
+            <text x="132" y="130" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-cyan)" text-anchor="middle">Preflight</text>
+
+            <!-- CorsFilter Bean -->
+            <g class="node" transform="translate(165, 100)">
+              <rect x="0" y="0" width="95" height="80" rx="8" fill="#18181b" stroke="var(--border-color)" stroke-width="1.5" />
+              <text x="47.5" y="22" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">CorsFilter Bean</text>
+              <line x1="8" y1="32" x2="87" y2="32" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              <rect x="8" y="40" width="79" height="30" rx="4" fill="var(--color-cyan-glow)" stroke="rgba(6, 182, 212, 0.3)" stroke-width="1" />
+              <text x="47.5" y="50" font-family="'JetBrains Mono', monospace" font-size="7" fill="var(--color-cyan)" text-anchor="middle">allowed-origins</text>
+              <text x="47.5" y="60" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-main)" font-weight="600" text-anchor="middle">localhost:3000</text>
+            </g>
+
+            <!-- Pipe: CorsFilter to RestController -->
+            <path d="M 260 140 H 300" fill="none" stroke="#a1a1aa" stroke-width="1" marker-end="url(#arrow)" />
+
+            <!-- RestController -->
+            <g class="node" transform="translate(310, 100)">
+              <rect x="0" y="0" width="105" height="80" rx="8" fill="#18181b" stroke="var(--border-color)" stroke-width="1.5" />
+              <text x="52.5" y="22" font-family="'Outfit', sans-serif" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">RestController</text>
+              <line x1="8" y1="32" x2="97" y2="32" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              <rect x="8" y="40" width="89" height="30" rx="4" fill="rgba(255,255,255,0.05)" stroke="var(--border-color)" stroke-width="1" />
+              <text x="52.5" y="50" font-family="'Outfit', sans-serif" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Supports Input</text>
+              <text x="52.5" y="61" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--text-main)" font-weight="600" text-anchor="middle">Pageable</text>
+            </g>
+
+            <!-- Pipe: RestController to Service -->
+            <path d="M 415 140 H 450" fill="none" stroke="#a1a1aa" stroke-width="1" marker-end="url(#arrow)" />
+
+            <!-- Service Layer Box -->
+            <g class="node node-cyan" transform="translate(460, 110)">
+              <rect x="0" y="0" width="110" height="60" rx="8" fill="#18181b" stroke="var(--color-cyan)" stroke-width="1.5" />
+              <text x="55" y="26" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">Service Layer</text>
+              <text x="55" y="44" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--color-cyan)" text-anchor="middle">AttendanceService</text>
+            </g>
+
+            <!-- Split Paths: Service -> Cache & Service -> Fallback -->
+            <!-- Path A: Cache Hit (Cyan) -->
+            <path d="M 515 110 Q 515 40 450 40" fill="none" stroke="var(--color-cyan)" stroke-width="1.8" class="flow-line" marker-end="url(#arrow-cyan)" />
+            <text x="510" y="65" font-family="'Outfit', sans-serif" font-size="8" fill="var(--color-cyan)" text-anchor="middle">1. Cache Read</text>
+
+            <!-- Redis Cache Box -->
+            <g class="node node-cyan" transform="translate(320, 10)">
+              <rect x="0" y="0" width="120" height="60" rx="8" fill="rgba(6, 182, 212, 0.05)" stroke="var(--color-cyan)" stroke-width="2" />
+              <text x="60" y="22" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">Hot Redis Cache</text>
+              <rect x="8" y="32" width="104" height="20" rx="4" fill="var(--color-cyan-glow)" stroke="rgba(6, 182, 212, 0.3)" stroke-width="1" />
+              <text x="60" y="45" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-cyan)" font-weight="700" text-anchor="middle">Active Set: 16H TTL</text>
+            </g>
+
+            <!-- Path B: Cache Error (Red) -->
+            <path d="M 515 170 Q 515 250 460 250" fill="none" stroke="var(--color-red)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arrow-red)" />
+            <text x="535" y="215" font-family="'JetBrains Mono', monospace" font-size="7" fill="var(--color-red)" text-anchor="middle">RedisConnectionEx</text>
+
+            <!-- CacheErrorHandler Box -->
+            <g class="node node-red" transform="translate(340, 220)">
+              <rect x="0" y="0" width="110" height="60" rx="6" fill="rgba(239, 68, 68, 0.05)" stroke="var(--color-red)" stroke-width="1.5" />
+              <text x="55" y="24" font-family="'Outfit', sans-serif" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">ErrorHandler</text>
+              <rect x="6" y="34" width="98" height="18" rx="3" fill="var(--color-red-glow)" stroke="rgba(239, 68, 68, 0.3)" stroke-width="1" />
+              <text x="55" y="46" font-family="'JetBrains Mono', monospace" font-size="7" fill="var(--color-red)" text-anchor="middle">Intercepts Failures</text>
+            </g>
+
+            <!-- Path C: Database Fallback (Orange) -->
+            <path d="M 340 250 H 280" fill="none" stroke="var(--color-orange)" stroke-width="1.8" class="flow-line" marker-end="url(#arrow-orange)" />
+            <text x="310" y="242" font-family="'Outfit', sans-serif" font-size="8" fill="var(--color-orange)" text-anchor="middle">Fallback</text>
+
+            <!-- Repository Layer with JOIN FETCH -->
+            <g class="node node-orange" transform="translate(130, 210)">
+              <rect x="0" y="0" width="140" height="80" rx="8" fill="#18181b" stroke="var(--color-orange)" stroke-width="2" />
+              <text x="70" y="22" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">JPA Repository</text>
+              <line x1="8" y1="32" x2="132" y2="32" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              <rect x="8" y="40" width="124" height="30" rx="4" fill="var(--color-orange-glow)" stroke="rgba(249, 115, 22, 0.3)" stroke-width="1" />
+              <text x="70" y="50" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-orange)" font-weight="700" text-anchor="middle">O(1) JOIN FETCH</text>
+              <text x="70" y="60" font-family="'Outfit', sans-serif" font-size="7" fill="var(--text-muted)" text-anchor="middle">Prevents N+1 DB Queries</text>
+            </g>
+
+            <!-- PostgreSQL Database -->
+            <path d="M 130 250 H 90" fill="none" stroke="var(--color-orange)" stroke-width="1.5" marker-end="url(#arrow-orange)" />
+            <g class="node" transform="translate(15, 220)">
+              <rect x="0" y="0" width="65" height="60" rx="6" fill="#18181b" stroke="var(--border-color)" stroke-width="1.5" />
+              <text x="32.5" y="28" font-family="'Outfit', sans-serif" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">Supabase</text>
+              <text x="32.5" y="44" font-family="'JetBrains Mono', monospace" font-size="8.5" fill="var(--color-orange)" text-anchor="middle">Postgres</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ZONE 2: ATOMIC OVERTIME SETTLEMENT TRANSACTION ISOLATION -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2><span class="card-zone">Zone 2</span> Atomic Overtime Settlement Transaction Isolation & Event-Driven SMS Emitter</h2>
+            <p>Synchronous API fetches outside transactional scope, @Transactional boundary processing rules, rollback triggers, and post-commit events</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- External Wage Service Call (Outside TX) -->
+            <g class="node" transform="translate(10, 140)">
+              <rect x="0" y="0" width="115" height="75" rx="8" fill="#18181b" stroke="var(--border-color)" stroke-width="1.5" />
+              <text x="57.5" y="24" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">ExternalWageService</text>
+              <line x1="8" y1="36" x2="107" y2="36" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              <text x="57.5" y="50" font-family="'Outfit', sans-serif" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Synchronous Rates API</text>
+              <text x="57.5" y="62" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--color-cyan)" text-anchor="middle">HTTP GET (Out of TX)</text>
+            </g>
+
+            <path d="M 125 177 H 165" fill="none" stroke="var(--color-cyan)" stroke-width="1.5" class="flow-line" marker-end="url(#arrow-cyan)" />
+            <text x="145" y="165" font-family="'Outfit', sans-serif" font-size="8" fill="var(--color-cyan)" text-anchor="middle">Wages</text>
+
+            <!-- @Transactional Box Boundary -->
+            <g transform="translate(175, 20)">
+              <rect x="0" y="0" width="220" height="345" rx="10" fill="rgba(249, 115, 22, 0.02)" stroke="var(--color-orange)" stroke-width="2.5" stroke-dasharray="8 5" />
+              <!-- Transaction Label Banner -->
+              <rect x="15" y="-12" width="110" height="24" rx="4" fill="var(--color-orange)" />
+              <text x="70" y="3" font-family="'JetBrains Mono', monospace" font-size="9.5" fill="#000000" font-weight="800" text-anchor="middle">@Transactional</text>
+
+              <!-- Process Loop Box -->
+              <g class="node node-orange" transform="translate(15, 30)">
+                <rect x="0" y="0" width="190" height="90" rx="6" fill="#18181b" stroke="var(--border-color)" stroke-width="1.2" />
+                <text x="95" y="24" font-family="'Outfit', sans-serif" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">Processing Loop</text>
+                <text x="95" y="42" font-family="'Outfit', sans-serif" font-size="8" fill="var(--text-muted)" text-anchor="middle">Input: 22 Attendance Entries</text>
+                
+                <rect x="10" y="55" width="170" height="25" rx="3" fill="var(--color-red-glow)" stroke="rgba(239, 68, 68, 0.4)" stroke-width="1" />
+                <text x="95" y="70" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-red)" font-weight="700" text-anchor="middle">Rollback if Loop Entry #15 Fails</text>
+              </g>
+
+              <!-- Successful Commit Box -->
+              <g class="node node-emerald" transform="translate(15, 145)">
+                <rect x="0" y="0" width="190" height="60" rx="6" fill="rgba(16, 185, 129, 0.05)" stroke="var(--color-emerald)" stroke-width="1.8" />
+                <text x="95" y="26" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="800" text-anchor="middle">Transaction Commit</text>
+                <rect x="15" y="36" width="160" height="16" rx="3" fill="var(--color-emerald-glow)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="1" />
+                <text x="95" y="47" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-emerald)" font-weight="700" text-anchor="middle">TX COMMITTED TO DATABASE</text>
+              </g>
+
+              <!-- ApplicationEventPublisher -->
+              <g class="node" transform="translate(15, 230)">
+                <rect x="0" y="0" width="190" height="50" rx="6" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+                <text x="95" y="24" font-family="'Outfit', sans-serif" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle">ApplicationEventPublisher</text>
+                <text x="95" y="38" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--color-cyan)" text-anchor="middle">publishes OvertimeSettledEvent</text>
+              </g>
+
+              <path d="M 110 120 V 145" fill="none" stroke="var(--color-orange)" stroke-width="1" marker-end="url(#arrow-orange)" />
+              <path d="M 110 205 V 230" fill="none" stroke="var(--color-emerald)" stroke-width="1.2" class="flow-line" marker-end="url(#arrow-cyan)" />
+            </g>
+
+            <!-- Line Exiting Transaction AFTER Successful Commit -->
+            <path d="M 370 280 H 425" fill="none" stroke="var(--color-emerald)" stroke-width="1.8" class="flow-line-fast" marker-end="url(#arrow-cyan)" />
+            <text x="400" y="270" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-emerald)" font-weight="600" text-anchor="middle">AFTER_COMMIT</text>
+
+            <!-- Asynchronous Listener & SMS Gateway -->
+            <g class="node node-emerald" transform="translate(435, 180)">
+              <rect x="0" y="0" width="150" height="150" rx="8" fill="rgba(16, 185, 129, 0.04)" stroke="var(--color-emerald)" stroke-width="2" />
+              <text x="75" y="24" font-family="'Outfit', sans-serif" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">OvertimeSettlementListener</text>
+              <text x="75" y="40" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--color-purple)" text-anchor="middle">@Async Execution Thread</text>
+              
+              <line x1="8" y1="52" x2="142" y2="52" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              
+              <rect x="10" y="65" width="130" height="70" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+              <text x="75" y="82" font-family="'Outfit', sans-serif" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">External SMS Gateway</text>
+              <text x="75" y="98" font-family="'Outfit', sans-serif" font-size="7" fill="var(--text-muted)" text-anchor="middle">Dispatches Wage Slips</text>
+              <rect x="18" y="108" width="114" height="18" rx="2" fill="var(--color-emerald-glow)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="1" />
+              <text x="75" y="120" font-family="'JetBrains Mono', monospace" font-size="7" fill="var(--color-emerald)" font-weight="700" text-anchor="middle">Guarantees Delivery</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ZONE 3: HIKARICP CONNECTION POOL MANAGEMENT -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2><span class="card-zone">Zone 3</span> HikariCP Connection Pool Management with Supabase Port 6543 Layout</h2>
+            <p>Staging environment traffic routing via dedicated PgBouncer port, keepalive pooling rules, and cloud database mapping</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- App Server / HikariCP boundary -->
+            <g transform="translate(15, 60)">
+              <rect x="0" y="0" width="190" height="260" rx="10" fill="rgba(6, 182, 212, 0.02)" stroke="var(--color-cyan)" stroke-width="2" />
+              <rect x="15" y="-12" width="160" height="24" rx="4" fill="var(--color-cyan)" />
+              <text x="95" y="4" font-family="'Outfit', sans-serif" font-size="10.5" fill="#000000" font-weight="800" text-anchor="middle">HikariCP Pool (Staging)</text>
+
+              <!-- Connection Slots -->
+              <rect x="15" y="30" width="75" height="40" rx="4" fill="var(--color-cyan-glow)" stroke="var(--color-cyan)" stroke-width="1.2" />
+              <text x="52.5" y="48" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-cyan)" font-weight="750" text-anchor="middle">Active-1</text>
+              <text x="52.5" y="60" font-family="'Outfit', sans-serif" font-size="6.5" fill="var(--text-muted)" text-anchor="middle">IN USE</text>
+
+              <rect x="100" y="30" width="75" height="40" rx="4" fill="var(--color-cyan-glow)" stroke="var(--color-cyan)" stroke-width="1.2" />
+              <text x="137.5" y="48" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--color-cyan)" font-weight="750" text-anchor="middle">Active-2</text>
+              <text x="137.5" y="60" font-family="'Outfit', sans-serif" font-size="6.5" fill="var(--text-muted)" text-anchor="middle">IN USE</text>
+
+              <rect x="15" y="80" width="75" height="40" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+              <text x="52.5" y="103" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Idle-3</text>
+              <rect x="100" y="80" width="75" height="40" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+              <text x="137.5" y="103" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Idle-4</text>
+
+              <rect x="15" y="130" width="75" height="40" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+              <text x="52.5" y="153" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Idle-5</text>
+              <rect x="100" y="130" width="75" height="40" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+              <text x="137.5" y="153" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Idle-6</text>
+
+              <!-- Configurations -->
+              <rect x="15" y="190" width="160" height="50" rx="4" fill="rgba(255,255,255,0.04)" stroke="var(--border-color)" stroke-width="1" />
+              <text x="95" y="208" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">spring.datasource.hikari</text>
+              <text x="95" y="222" font-family="'JetBrains Mono', monospace" font-size="8.5" fill="var(--color-cyan)" font-weight="700" text-anchor="middle">maximum-pool-size: 10</text>
+            </g>
+
+            <!-- Pipe routing outbound -->
+            <path d="M 205 130 H 295" fill="none" stroke="var(--color-cyan)" stroke-width="2.5" class="flow-line" />
+            <path d="M 205 180 H 295" fill="none" stroke="var(--color-cyan)" stroke-width="2.5" class="flow-line" />
+            <text x="250" y="115" font-family="'Outfit', sans-serif" font-size="8.5" fill="var(--color-cyan)" text-anchor="middle">IPv4 Traffic Route</text>
+
+            <!-- Supabase PgBouncer Node -->
+            <g class="node node-orange" transform="translate(310, 50)">
+              <rect x="0" y="0" width="145" height="280" rx="8" fill="rgba(249, 115, 22, 0.04)" stroke="var(--color-orange)" stroke-width="2" />
+              <text x="72.5" y="26" font-family="'Outfit', sans-serif" font-size="12" fill="#ffffff" font-weight="750" text-anchor="middle">PgBouncer Pooler</text>
+              <text x="72.5" y="42" font-family="'Outfit', sans-serif" font-size="8.5" fill="var(--text-muted)" text-anchor="middle">Supabase Connection</text>
+              
+              <rect x="12" y="55" width="121" height="25" rx="4" fill="var(--color-orange-glow)" stroke="rgba(249, 115, 22, 0.35)" stroke-width="1.2" />
+              <text x="72.5" y="71" font-family="'JetBrains Mono', monospace" font-size="9.5" fill="var(--color-orange)" font-weight="800" text-anchor="middle">Port 6543</text>
+
+              <!-- Rules parameters -->
+              <!-- Max Lifetime -->
+              <g transform="translate(12, 95)">
+                <rect x="0" y="0" width="121" height="50" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+                <text x="60.5" y="16" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--text-muted)" text-anchor="middle">max-lifetime</text>
+                <text x="60.5" y="32" font-family="'JetBrains Mono', monospace" font-size="9" fill="var(--color-orange)" font-weight="700" text-anchor="middle">300000ms</text>
+                <text x="60.5" y="42" font-family="'Outfit', sans-serif" font-size="7" fill="var(--text-muted)" text-anchor="middle">(5 Minutes Pool Lifetime)</text>
+              </g>
+
+              <!-- Keepalive Time -->
+              <g transform="translate(12, 160)">
+                <rect x="0" y="0" width="121" height="50" rx="4" fill="#18181b" stroke="var(--border-color)" stroke-width="1" />
+                <text x="60.5" y="16" font-family="'JetBrains Mono', monospace" font-size="8" fill="var(--text-muted)" text-anchor="middle">keepalive-time</text>
+                <text x="60.5" y="32" font-family="'JetBrains Mono', monospace" font-size="9" fill="var(--color-orange)" font-weight="700" text-anchor="middle">30000ms</text>
+                <text x="60.5" y="42" font-family="'Outfit', sans-serif" font-size="7" fill="var(--text-muted)" text-anchor="middle">(30 Seconds Intercept)</text>
+              </g>
+
+              <!-- Mode -->
+              <rect x="12" y="225" width="121" height="40" rx="4" fill="rgba(255,255,255,0.03)" stroke="var(--border-color)" stroke-width="1" />
+              <text x="72.5" y="242" font-family="'Outfit', sans-serif" font-size="9.5" fill="#ffffff" font-weight="600" text-anchor="middle">Transaction Pooler</text>
+              <text x="72.5" y="255" font-family="'Outfit', sans-serif" font-size="7.5" fill="var(--text-muted)" text-anchor="middle">Prevents Connection Exhaustion</text>
+            </g>
+
+            <!-- Route to Database -->
+            <path d="M 455 190 H 500" fill="none" stroke="var(--color-orange)" stroke-width="1.8" class="flow-line" marker-end="url(#arrow-orange)" />
+
+            <!-- Supabase Postgres Cloud instance -->
+            <g class="node" transform="translate(510, 135)">
+              <rect x="0" y="0" width="75" height="110" rx="8" fill="#18181b" stroke="var(--border-color)" stroke-width="1.5" />
+              <rect x="10" y="15" width="55" height="80" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+              <!-- DB cylinder representations -->
+              <ellipse cx="37.5" cy="35" rx="20" ry="8" fill="var(--color-orange-glow)" stroke="var(--color-orange)" stroke-width="1.2" />
+              <path d="M 17.5 35 V 55 A 20 8 0 0 0 57.5 55 V 35 Z" fill="var(--color-orange-glow)" stroke="var(--color-orange)" stroke-width="1.2" />
+              <path d="M 17.5 55 V 75 A 20 8 0 0 0 57.5 75 V 55 Z" fill="var(--color-orange-glow)" stroke="var(--color-orange)" stroke-width="1.2" />
+              <text x="37.5" y="90" font-family="'JetBrains Mono', monospace" font-size="8" fill="#ffffff" font-weight="600" text-anchor="middle">Supabase</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ZONE 4: HUMAN ACTORS & BUSINESS CONSTRAINTS ARCHITECTURAL MATRIX -->
+      <div class="card card-wide">
+        <div class="card-header">
+          <div>
+            <h2><span class="card-zone">Zone 4</span> Human Actors & Business Constraints Architectural Matrix</h2>
+            <p>Visual mapping tracing the translation of physical workforce constraints to transactional backend layers</p>
+          </div>
+        </div>
+        <div class="matrix-container">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Human Actor</th>
+                <th style="width: 35%;">System Hook</th>
+                <th style="width: 40%;">Business Constraint</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="actor-wrapper">
+                    <div class="actor-icon icon-cyan">&#128117;</div>
+                    <div>
+                      <div class="actor-name">Site Supervisor</div>
+                      <div class="actor-subtext">Standing in hot sun / field crew checkin</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="system-badge active-badge">Fast Redis / Active Cache Lookups</span>
+                </td>
+                <td class="business-constraint-desc">
+                  <span class="constraint-highlight">Protects On-Site Operational Flow:</span> Turnstile read times must remain sub-50ms to prevent heavy crew clock-in bottlenecks and physical site delays.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="actor-wrapper">
+                    <div class="actor-icon icon-orange">&#128187;</div>
+                    <div>
+                      <div class="actor-name">Payroll Operator</div>
+                      <div class="actor-subtext">Batch processing monthly salaries</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="system-badge transaction-badge">Atomic Transactions / Rollbacks</span>
+                </td>
+                <td class="business-constraint-desc">
+                  <span class="constraint-highlight">Prevents Billing Leakage:</span> Entire batch rolls back if single item fails (e.g. entry #15 error rolls back all 22 entries), preventing ledger mismatch.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="actor-wrapper">
+                    <div class="actor-icon icon-emerald">&#128227;</div>
+                    <div>
+                      <div class="actor-name">Blue-Collar Worker</div>
+                      <div class="actor-subtext">Wage verification and physical slip matching</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="system-badge event-badge">Post-Commit Event SMS Emitter</span>
+                </td>
+                <td class="business-constraint-desc">
+                  <span class="constraint-highlight">Eliminates Disputes & Maintains Labor Trust:</span> Guarantees SMS slips are generated *only* after transactional commit, eliminating mismatch disputes.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="actor-wrapper">
+                    <div class="actor-icon icon-purple">&#128100;</div>
+                    <div>
+                      <div class="actor-name">Corporate Auditor / CFO</div>
+                      <div class="actor-subtext">Strict regulatory compliance check</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="system-badge engine-badge">Overtime Calculation Engine</span>
+                </td>
+                <td class="business-constraint-desc">
+                  <span class="constraint-highlight">Strict Overtime Limit Enforcement:</span> Hard-caps monthly overtime payout budget to 60 hours per worker, ensuring compliance with construction union limits.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
